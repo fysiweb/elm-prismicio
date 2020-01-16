@@ -1,4 +1,4 @@
-module Pages.Homepage exposing (..)
+module Pages.Homepage exposing (view, viewBanner)
 
 import Documents.Homepage exposing (Homepage)
 import Documents.Menu exposing (Menu)

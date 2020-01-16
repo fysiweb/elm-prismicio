@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Browser
 import Documents.Homepage
 import Documents.Menu
 import Documents.Page
@@ -13,12 +14,15 @@ import Prismic.Field as Prismic exposing (defaultLinkResolver)
 import Task
 
 
-main : Program Never Model Msg
+
+--main : Program Never Model Msg
+
+
 main =
-    Html.program
-        { init = init
+    Browser.document
+        { init = \_ -> init
         , update = update
-        , view = view
+        , view = \model -> { title = "example", body = [ view model ] }
         , subscriptions = always Sub.none
         }
 
@@ -94,7 +98,7 @@ update msg model =
                 _ =
                     Debug.log "err" err
             in
-            model ! []
+            ( model, Cmd.none )
 
         MenuResponse (Ok ( prismic, result )) ->
             ( { model
@@ -112,7 +116,7 @@ update msg model =
                 _ =
                     Debug.log "err" err
             in
-            model ! []
+            ( model, Cmd.none )
 
         PageResponse (Ok ( prismic, result )) ->
             ( { model
@@ -129,7 +133,7 @@ update msg model =
                 _ =
                     Debug.log "err" err
             in
-            model ! []
+            ( model, Cmd.none )
 
         NavigateTo ref ->
             case ( ref.linkedDocumentType, ref.uid ) of

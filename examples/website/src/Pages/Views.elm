@@ -102,7 +102,8 @@ viewHighlights groups =
                             (\link linkText ->
                                 [ Html.p []
                                     [ Html.a
-                                        [ Html.href (toString link) ]
+                                        [ Html.href "todo" ]
+                                        --todo: link ]
                                         [ Html.text linkText ]
                                     ]
                                 ]

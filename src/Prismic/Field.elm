@@ -1,33 +1,15 @@
-module Prismic.Field
-    exposing
-        ( DocumentReference
-        , Embed
-        , Field
-        , ImageDimensions
-        , ImageView
-        , ImageViews
-        , Link
-        , LinkResolver
-        , StructuredText
-        , StructuredTextBlock
-        , date
-        , defaultLinkResolver
-        , embedAsHtml
-        , getFirstImage
-        , getFirstParagraph
-        , getText
-        , getTexts
-        , getTitle
-        , image
-        , imageAsHtml
-        , link
-        , linkAsHtml
-        , resolveLink
-        , structuredText
-        , structuredTextAsHtml
-        , structuredTextBlockAsHtml
-        , text
-        )
+module Prismic.Field exposing
+    ( Field
+    , StructuredText, StructuredTextBlock
+    , ImageViews, ImageView, ImageDimensions
+    , Embed
+    , Link, DocumentReference
+    , text, structuredText, image, date, link
+    , structuredTextAsHtml, structuredTextBlockAsHtml
+    , imageAsHtml, embedAsHtml, linkAsHtml
+    , LinkResolver, defaultLinkResolver, resolveLink
+    , getTitle, getFirstImage, getFirstParagraph, getText, getTexts
+    )
 
 {-|
 
@@ -78,11 +60,14 @@ following components.
 
 -}
 
-import Date
+--import Date
+
 import Html exposing (Html)
 import Html.Attributes exposing (class, href, src)
 import Json.Encode
 import Prismic.Internal as Internal exposing (..)
+import Time
+
 
 
 -- TYPES
@@ -207,8 +192,8 @@ structuredTextAsHtml linkResolver (StructuredText blocks) =
 structuredTextBlockAsHtml : LinkResolver msg -> StructuredTextBlock -> Html msg
 structuredTextBlockAsHtml linkResolver field =
     case field of
-        SImage image ->
-            imageAsHtml image
+        SImage image_ ->
+            imageAsHtml image_
 
         SEmbed embed ->
             embedAsHtml embed
@@ -252,8 +237,8 @@ blockAsHtml el linkResolver field =
                 Strong ->
                     Html.strong []
 
-                Hyperlink link ->
-                    Html.a (resolveLink linkResolver link)
+                Hyperlink link_ ->
+                    Html.a (resolveLink linkResolver link_)
 
         foldFn span ( childs, index ) =
             let
@@ -281,8 +266,8 @@ blockAsHtml el linkResolver field =
 
 {-| -}
 imageAsHtml : ImageView -> Html msg
-imageAsHtml image =
-    Html.img [ src image.url ] []
+imageAsHtml image_ =
+    Html.img [ src image_.url ] []
 
 
 {-| -}
@@ -298,8 +283,8 @@ embedAsHtml embed =
 
 {-| -}
 resolveLink : LinkResolver msg -> Link -> List (Html.Attribute msg)
-resolveLink linkResolver link =
-    case link of
+resolveLink linkResolver link_ =
+    case link_ of
         DocumentLink linkedDoc isBroken ->
             linkResolver.resolveDocumentReference linkedDoc
 
@@ -309,14 +294,14 @@ resolveLink linkResolver link =
 
 {-| -}
 linkAsHtml : LinkResolver msg -> Link -> Html msg
-linkAsHtml linkResolver link =
+linkAsHtml linkResolver link_ =
     let
         attrs =
-            resolveLink linkResolver link
+            resolveLink linkResolver link_
     in
-    case link of
+    case link_ of
         DocumentLink linkedDoc isBroken ->
-            Html.a attrs [ Html.text (toString linkedDoc.slug) ]
+            Html.a attrs [ Html.text linkedDoc.slug ]
 
         WebLink url ->
             Html.a attrs [ Html.text url ]
@@ -325,7 +310,7 @@ linkAsHtml linkResolver link =
 {-| Get the first title out of some `StructuredText`, if there is one.
 -}
 getTitle : StructuredText -> Maybe StructuredTextBlock
-getTitle (StructuredText structuredText) =
+getTitle (StructuredText structuredText_) =
     let
         isTitle field =
             case field of
@@ -341,13 +326,13 @@ getTitle (StructuredText structuredText) =
                 _ ->
                     False
     in
-    List.head (List.filter isTitle structuredText)
+    List.head (List.filter isTitle structuredText_)
 
 
 {-| Get the first paragraph out of some `StructuredText`, if there is one.
 -}
 getFirstParagraph : StructuredText -> Maybe StructuredTextBlock
-getFirstParagraph (StructuredText structuredText) =
+getFirstParagraph (StructuredText structuredText_) =
     let
         isParagraph field =
             case field of
@@ -357,23 +342,23 @@ getFirstParagraph (StructuredText structuredText) =
                 _ ->
                     False
     in
-    List.head (List.filter isParagraph structuredText)
+    List.head (List.filter isParagraph structuredText_)
 
 
 {-| Get the first image out of some `StructuredText`, if there is one.
 -}
 getFirstImage : StructuredText -> Maybe ImageView
-getFirstImage (StructuredText structuredText) =
+getFirstImage (StructuredText structuredText_) =
     let
         getImage field =
             case field of
-                SImage image ->
-                    Just image
+                SImage image_ ->
+                    Just image_
 
                 _ ->
                     Nothing
     in
-    List.head (List.filterMap getImage structuredText)
+    List.head (List.filterMap getImage structuredText_)
 
 
 {-| Get the contents of a single `StructuredText` element as a `String`.
@@ -423,11 +408,11 @@ text =
     Decoder
         (\field ->
             case field of
-                Text text ->
-                    Ok text
+                Text text_ ->
+                    Ok text_
 
                 _ ->
-                    Err ("Expected a Text field, but got '" ++ toString field ++ "'.")
+                    Err "Expected a Text field, but got ''."
         )
 
 
@@ -442,7 +427,7 @@ structuredText =
                     Ok x
 
                 _ ->
-                    Err ("Expected a StructuredText field, but got '" ++ toString field ++ "'.")
+                    Err "Expected a StructuredText field, but got ''."
         )
 
 
@@ -457,13 +442,13 @@ image =
                     Ok x
 
                 _ ->
-                    Err ("Expected an Image field, but got '" ++ toString field ++ "'.")
+                    Err "Expected an Image field, but got ''."
         )
 
 
 {-| Decode a Date field.
 -}
-date : Decoder Field Date.Date
+date : Decoder Field Time.Posix
 date =
     Decoder
         (\field ->
@@ -472,7 +457,7 @@ date =
                     Ok x
 
                 _ ->
-                    Err ("Expected a Date field, but got '" ++ toString field ++ "'.")
+                    Err "Expected a Date field, but got ''."
         )
 
 
@@ -487,5 +472,5 @@ link =
                     Ok x
 
                 _ ->
-                    Err ("Expected a Link field, but got '" ++ toString field ++ "'.")
+                    Err "Expected a Link field, but got ''."
         )

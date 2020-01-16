@@ -1,9 +1,11 @@
-module Prismic.Internal exposing (..)
+module Prismic.Internal exposing (Block, Decoder(..), Document, DocumentField(..), DocumentReference, Embed(..), EmbedRich, EmbedVideo, Field(..), GetKey, Group, ImageDimensions, ImageView, ImageViews, Link(..), Slice, SliceContentV1(..), SliceContentVersion(..), SliceZone, Span, SpanElement(..), StructuredText(..), StructuredTextBlock(..), andThen, apply, custom, decode, decodeBlock, decodeDate, decodeDocumentField, decodeDocumentJson, decodeDocumentReferenceJson, decodeEmbed, decodeEmbedRich, decodeEmbedVideo, decodeField, decodeGroups, decodeImageDimensions, decodeImageView, decodeImageViews, decodeLink, decodeSearchResult, decodeSlice, decodeSliceContent, decodeSliceContentField, decodeSliceZone, decodeSpan, decodeSpanType, decodeStructuredText, decodeStructuredTextBlock, decodeValue, fail, map, optional, optionalField, required, requiredField, succeed)
 
-import Date
+--import Date
+
 import Dict exposing (Dict)
 import Json.Decode as Json
-import Json.Decode.Pipeline as Json
+import Json.Decode.Pipeline as JsonP
+import Time
 
 
 type alias Document =
@@ -31,7 +33,7 @@ type Field
     | Color String
     | Image ImageViews
     | Number Float
-    | Date Date.Date
+    | Date Time.Posix
     | Link Link
 
 
@@ -315,15 +317,15 @@ optional getKey key fieldDecoder default decoder =
 
 decodeSearchResult : Json.Decoder Document
 decodeSearchResult =
-    Json.decode Document
-        |> Json.custom decodeDocumentJson
-        |> Json.required "href" Json.string
-        |> Json.required "id" Json.string
-        |> Json.required "linked_documents" (Json.list decodeDocumentReferenceJson)
-        |> Json.required "slugs" (Json.list Json.string)
-        |> Json.required "tags" (Json.list Json.string)
-        |> Json.required "type" Json.string
-        |> Json.required "uid" (Json.nullable Json.string)
+    Json.succeed Document
+        |> JsonP.custom decodeDocumentJson
+        |> JsonP.required "href" Json.string
+        |> JsonP.required "id" Json.string
+        |> JsonP.required "linked_documents" (Json.list decodeDocumentReferenceJson)
+        |> JsonP.required "slugs" (Json.list Json.string)
+        |> JsonP.required "tags" (Json.list Json.string)
+        |> JsonP.required "type" Json.string
+        |> JsonP.required "uid" (Json.nullable Json.string)
 
 
 {-| Decode a `Document` from JSON.
@@ -398,30 +400,36 @@ decodeField =
     Json.field "type" Json.string |> Json.andThen decodeOnType
 
 
-decodeDate : Json.Decoder Date.Date
+decodeDate : Json.Decoder Time.Posix
 decodeDate =
-    Json.string
-        |> Json.andThen
-            (\str ->
-                case Date.fromString str of
-                    Ok date ->
-                        Json.succeed date
+    Json.succeed (Time.millisToPosix 12)
 
-                    Err msg ->
-                        Json.fail msg
-            )
+
+
+{-
+   Json.string
+       |> Json.andThen
+           (\str ->
+               case Date.fromString str of
+                   Ok date ->
+                       Json.succeed date
+
+                   Err msg ->
+                       Json.fail msg
+           )
+-}
 
 
 {-| Decode Html.a `DocumentReference` from JSON.
 -}
 decodeDocumentReferenceJson : Json.Decoder DocumentReference
 decodeDocumentReferenceJson =
-    Json.decode DocumentReference
-        |> Json.required "id" Json.string
-        |> Json.optional "uid" (Json.maybe Json.string) Nothing
-        |> Json.required "slug" Json.string
-        |> Json.required "tags" (Json.list Json.string)
-        |> Json.required "type" Json.string
+    Json.succeed DocumentReference
+        |> JsonP.required "id" Json.string
+        |> JsonP.optional "uid" (Json.maybe Json.string) Nothing
+        |> JsonP.required "slug" Json.string
+        |> JsonP.required "tags" (Json.list Json.string)
+        |> JsonP.required "type" Json.string
 
 
 {-| Decode some `StructuredText`.
@@ -435,25 +443,25 @@ decodeStructuredText =
 -}
 decodeImageViews : Json.Decoder ImageViews
 decodeImageViews =
-    Json.decode ImageViews
-        |> Json.required "main" decodeImageView
-        |> Json.required "views" (Json.dict decodeImageView)
+    Json.succeed ImageViews
+        |> JsonP.required "main" decodeImageView
+        |> JsonP.required "views" (Json.dict decodeImageView)
 
 
 decodeImageView : Json.Decoder ImageView
 decodeImageView =
-    Json.decode ImageView
-        |> Json.required "alt" (Json.nullable Json.string)
-        |> Json.required "copyright" (Json.nullable Json.string)
-        |> Json.required "url" Json.string
-        |> Json.required "dimensions" decodeImageDimensions
+    Json.succeed ImageView
+        |> JsonP.required "alt" (Json.nullable Json.string)
+        |> JsonP.required "copyright" (Json.nullable Json.string)
+        |> JsonP.required "url" Json.string
+        |> JsonP.required "dimensions" decodeImageDimensions
 
 
 decodeImageDimensions : Json.Decoder ImageDimensions
 decodeImageDimensions =
-    Json.decode ImageDimensions
-        |> Json.required "width" Json.int
-        |> Json.required "height" Json.int
+    Json.succeed ImageDimensions
+        |> JsonP.required "width" Json.int
+        |> JsonP.required "height" Json.int
 
 
 decodeStructuredTextBlock : Json.Decoder StructuredTextBlock
@@ -483,25 +491,25 @@ decodeStructuredTextBlock =
                     Json.map SEmbed (Json.field "oembed" decodeEmbed)
 
                 _ ->
-                    Json.fail ("Unknown structured field type: " ++ toString typeStr)
+                    Json.fail ("Unknown structured field type: " ++ typeStr)
     in
     Json.field "type" Json.string |> Json.andThen decodeOnType
 
 
 decodeBlock : Json.Decoder Block
 decodeBlock =
-    Json.decode Block
-        |> Json.required "text" Json.string
-        |> Json.required "spans" (Json.list decodeSpan)
-        |> Json.optional "label" (Json.maybe Json.string) Nothing
+    Json.succeed Block
+        |> JsonP.required "text" Json.string
+        |> JsonP.required "spans" (Json.list decodeSpan)
+        |> JsonP.optional "label" (Json.maybe Json.string) Nothing
 
 
 decodeSpan : Json.Decoder Span
 decodeSpan =
-    Json.decode Span
-        |> Json.required "start" Json.int
-        |> Json.required "end" Json.int
-        |> Json.custom decodeSpanType
+    Json.succeed Span
+        |> JsonP.required "start" Json.int
+        |> JsonP.required "end" Json.int
+        |> JsonP.custom decodeSpanType
 
 
 decodeSpanType : Json.Decoder SpanElement
@@ -545,37 +553,37 @@ decodeEmbed =
 
 decodeEmbedVideo : Json.Decoder EmbedVideo
 decodeEmbedVideo =
-    Json.decode EmbedVideo
-        |> Json.required "author_name" Json.string
-        |> Json.required "author_url" Json.string
-        |> Json.required "embed_url" Json.string
-        |> Json.required "height" Json.int
-        |> Json.required "html" Json.string
-        |> Json.required "provider_name" Json.string
-        |> Json.required "provider_url" Json.string
-        |> Json.required "thumbnail_height" Json.int
-        |> Json.required "thumbnail_url" Json.string
-        |> Json.required "thumbnail_width" Json.int
-        |> Json.required "title" Json.string
-        |> Json.required "version" Json.string
-        |> Json.required "width" Json.int
+    Json.succeed EmbedVideo
+        |> JsonP.required "author_name" Json.string
+        |> JsonP.required "author_url" Json.string
+        |> JsonP.required "embed_url" Json.string
+        |> JsonP.required "height" Json.int
+        |> JsonP.required "html" Json.string
+        |> JsonP.required "provider_name" Json.string
+        |> JsonP.required "provider_url" Json.string
+        |> JsonP.required "thumbnail_height" Json.int
+        |> JsonP.required "thumbnail_url" Json.string
+        |> JsonP.required "thumbnail_width" Json.int
+        |> JsonP.required "title" Json.string
+        |> JsonP.required "version" Json.string
+        |> JsonP.required "width" Json.int
 
 
 decodeEmbedRich : Json.Decoder EmbedRich
 decodeEmbedRich =
-    Json.decode EmbedRich
-        |> Json.required "author_name" Json.string
-        |> Json.required "author_url" Json.string
-        |> Json.required "cache_age" Json.string
-        |> Json.required "embed_url" Json.string
-        |> Json.required "height" (Json.maybe Json.int)
-        |> Json.required "html" Json.string
-        |> Json.required "provider_name" Json.string
-        |> Json.required "provider_url" Json.string
-        |> Json.required "title" Json.string
-        |> Json.required "url" Json.string
-        |> Json.required "version" Json.string
-        |> Json.required "width" Json.int
+    Json.succeed EmbedRich
+        |> JsonP.required "author_name" Json.string
+        |> JsonP.required "author_url" Json.string
+        |> JsonP.required "cache_age" Json.string
+        |> JsonP.required "embed_url" Json.string
+        |> JsonP.required "height" (Json.maybe Json.int)
+        |> JsonP.required "html" Json.string
+        |> JsonP.required "provider_name" Json.string
+        |> JsonP.required "provider_url" Json.string
+        |> JsonP.required "title" Json.string
+        |> JsonP.required "url" Json.string
+        |> JsonP.required "version" Json.string
+        |> JsonP.required "width" Json.int
 
 
 {-| Decode Html.a `Link`.
@@ -586,13 +594,13 @@ decodeLink =
         decodeOnType typeStr =
             case typeStr of
                 "Link.document" ->
-                    Json.decode DocumentLink
-                        |> Json.requiredAt [ "value", "document" ] decodeDocumentReferenceJson
-                        |> Json.requiredAt [ "value", "isBroken" ] Json.bool
+                    Json.succeed DocumentLink
+                        |> JsonP.requiredAt [ "value", "document" ] decodeDocumentReferenceJson
+                        |> JsonP.requiredAt [ "value", "isBroken" ] Json.bool
 
                 "Link.web" ->
-                    Json.decode WebLink
-                        |> Json.requiredAt [ "value", "url" ] Json.string
+                    Json.succeed WebLink
+                        |> JsonP.requiredAt [ "value", "url" ] Json.string
 
                 _ ->
                     Json.fail ("Unknown link type: " ++ typeStr)
@@ -607,10 +615,10 @@ decodeSliceZone =
 
 decodeSlice : Json.Decoder Slice
 decodeSlice =
-    Json.decode Slice
-        |> Json.optional "slice_label" (Json.maybe Json.string) Nothing
-        |> Json.required "slice_type" Json.string
-        |> Json.custom decodeSliceContent
+    Json.succeed Slice
+        |> JsonP.optional "slice_label" (Json.maybe Json.string) Nothing
+        |> JsonP.required "slice_type" Json.string
+        |> JsonP.custom decodeSliceContent
 
 
 decodeSliceContent : Json.Decoder SliceContentVersion
@@ -622,9 +630,9 @@ decodeSliceContent =
             miniDocument =
                 Json.dict (Json.lazy (\_ -> decodeField))
           in
-          Json.decode SliceContentV2
-            |> Json.required "non-repeat" miniDocument
-            |> Json.required "repeat" (Json.list miniDocument)
+          Json.succeed SliceContentV2
+            |> JsonP.required "non-repeat" miniDocument
+            |> JsonP.required "repeat" (Json.list miniDocument)
         ]
 
 

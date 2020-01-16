@@ -1,4 +1,4 @@
-module Documents.Homepage exposing (..)
+module Documents.Homepage exposing (BodySlice(..), GalleryGroup, GalleryWithTitle, HighlightGroup, Homepage, bodySliceZone, decodeGalleryGroup, decodeHighlightGroup, decodeHomepage)
 
 import Prismic
     exposing
