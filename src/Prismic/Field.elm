@@ -218,6 +218,14 @@ structuredTextBlockAsHtml linkResolver field =
                 linkResolver
                 block
 
+        OListItem block ->
+            blockAsHtml
+                (\attrs childs ->
+                    Html.ol [] [ Html.li attrs childs ]
+                )
+                linkResolver
+                block
+
 
 blockAsHtml :
     (List (Html.Attribute msg)
@@ -379,6 +387,9 @@ getText field =
             block.text
 
         ListItem block ->
+            block.text
+
+        OListItem block ->
             block.text
 
         SImage imageField ->

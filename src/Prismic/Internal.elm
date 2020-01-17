@@ -51,6 +51,7 @@ type StructuredTextBlock
     | Heading3 Block
     | Paragraph Block
     | ListItem Block
+    | OListItem Block
     | SImage ImageView
     | SEmbed Embed
 
@@ -483,6 +484,9 @@ decodeStructuredTextBlock =
 
                 "list-item" ->
                     Json.map ListItem decodeBlock
+
+                "o-list-item" ->
+                    Json.map OListItem decodeBlock
 
                 "image" ->
                     Json.map SImage decodeImageView
