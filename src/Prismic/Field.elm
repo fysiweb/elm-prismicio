@@ -226,6 +226,9 @@ structuredTextBlockAsHtml linkResolver field =
                 linkResolver
                 block
 
+        Preformatted block ->
+            blockAsHtml Html.pre linkResolver block
+
 
 blockAsHtml :
     (List (Html.Attribute msg)
@@ -397,6 +400,9 @@ getText field =
 
         SEmbed _ ->
             ""
+
+        Preformatted block ->
+            block.text
 
 
 {-| Get the contents of a some `StructuredText` as a `String`.

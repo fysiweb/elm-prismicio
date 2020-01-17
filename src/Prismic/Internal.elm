@@ -54,6 +54,7 @@ type StructuredTextBlock
     | OListItem Block
     | SImage ImageView
     | SEmbed Embed
+    | Preformatted Block
 
 
 {-| Contents of `StructuredText` blocks, such as headings and paragraphs.
@@ -493,6 +494,9 @@ decodeStructuredTextBlock =
 
                 "embed" ->
                     Json.map SEmbed (Json.field "oembed" decodeEmbed)
+
+                "preformatted" ->
+                    Json.map Preformatted decodeBlock
 
                 _ ->
                     Json.fail ("Unknown structured field type: " ++ typeStr)
