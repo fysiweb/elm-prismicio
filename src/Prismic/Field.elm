@@ -4,8 +4,8 @@ module Prismic.Field exposing
     , ImageViews, ImageView, ImageDimensions
     , Embed
     , Link, DocumentReference
-    , Date
-    , text, structuredText, image, date, link
+    , Date, Timestamp
+    , text, structuredText, image, date, link, timestamp
     , structuredTextAsHtml, structuredTextBlockAsHtml
     , imageAsHtml, embedAsHtml, linkAsHtml
     , LinkResolver, defaultLinkResolver, resolveLink
@@ -45,12 +45,12 @@ following components.
 
 ### Time
 
-@docs Date
+@docs Date, Timestamp
 
 
 ## Decoding fields
 
-@docs text, structuredText, image, date, link
+@docs text, structuredText, image, date, link, timestamp
 
 
 ## Viewing fields
@@ -136,6 +136,12 @@ type alias DocumentReference =
 {-| A reference to a Prismic date.
 -}
 type alias Date =
+    Time.Posix
+
+
+{-| A reference to a Prismic timestamp.
+-}
+type alias Timestamp =
     Time.Posix
 
 
@@ -487,6 +493,21 @@ date =
 
                 _ ->
                     Err "Expected a Date field, but got ''."
+        )
+
+
+{-| Decode a Timestamp field.
+-}
+timestamp : Decoder Field Time.Posix
+timestamp =
+    Decoder
+        (\field ->
+            case field of
+                Timestamp x ->
+                    Ok x
+
+                _ ->
+                    Err "Expected a Timestamp field, but got ''."
         )
 
 

@@ -18,11 +18,13 @@ import Prismic.Field as Field
         , ImageViews
         , Link
         , StructuredText
+        , Timestamp
         , date
         , image
         , link
         , structuredText
         , text
+        , timestamp
         )
 import Prismic.Group as Group exposing (Group)
 import Prismic.Slice as Slice
@@ -39,6 +41,7 @@ type alias Homepage =
     , richtext : StructuredText
     , image : ImageViews
     , date : Date
+    , time : Timestamp
     }
 
 
@@ -80,6 +83,7 @@ decodeHomepage =
         |> required "richtext" structuredText
         |> required "image" image
         |> required "date" date
+        |> required "time" timestamp
 
 
 bodySliceZone : Decoder Slice BodySlice

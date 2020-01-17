@@ -139,6 +139,13 @@ view model =
         , model.homepage
             |> Maybe.map (.date >> Time.posixToMillis >> String.fromInt >> Html.text)
             |> Maybe.withDefault (Html.text ".date")
+            |> List.singleton
+            |> Html.div []
+        , model.homepage
+            |> Maybe.map (.time >> Time.posixToMillis >> String.fromInt >> Html.text)
+            |> Maybe.withDefault (Html.text ".timestamp")
+            |> List.singleton
+            |> Html.div []
         ]
 
 

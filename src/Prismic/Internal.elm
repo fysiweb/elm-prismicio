@@ -35,6 +35,7 @@ type Field
     | Image ImageViews
     | Number Float
     | Date Time.Posix
+    | Timestamp Time.Posix
     | Link Link
 
 
@@ -385,6 +386,9 @@ decodeField =
                 "Date" ->
                     Json.map Date (Json.field "value" decodeDate)
 
+                "Timestamp" ->
+                    Json.map Timestamp (Json.field "value" decodeTimestamp)
+
                 "Image" ->
                     Json.map Image (Json.field "value" decodeImageViews)
 
@@ -407,6 +411,12 @@ decodeDate : Json.Decoder Time.Posix
 decodeDate =
     Json.string
         |> Json.andThen (decodeIsoString "T00:00:00.000Z")
+
+
+decodeTimestamp : Json.Decoder Time.Posix
+decodeTimestamp =
+    Json.string
+        |> Json.andThen (decodeIsoString "")
 
 
 decodeIsoString : String -> String -> Json.Decoder Time.Posix
