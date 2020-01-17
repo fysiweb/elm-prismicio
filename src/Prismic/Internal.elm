@@ -3,6 +3,7 @@ module Prismic.Internal exposing (Block, Decoder(..), Document, DocumentField(..
 --import Date
 
 import Dict exposing (Dict)
+import Iso8601
 import Json.Decode as Json
 import Json.Decode.Pipeline as JsonP
 import Time
@@ -404,7 +405,18 @@ decodeField =
 
 decodeDate : Json.Decoder Time.Posix
 decodeDate =
-    Json.succeed (Time.millisToPosix 12)
+    Json.string
+        |> Json.andThen (decodeIsoString "T00:00:00.000Z")
+
+
+decodeIsoString : String -> String -> Json.Decoder Time.Posix
+decodeIsoString time str =
+    case time |> (++) str |> Iso8601.toTime of
+        Result.Ok posix ->
+            Json.succeed posix
+
+        Result.Err _ ->
+            Json.fail <| "Invalid date: " ++ str
 
 
 

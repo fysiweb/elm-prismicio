@@ -4,6 +4,7 @@ module Prismic.Field exposing
     , ImageViews, ImageView, ImageDimensions
     , Embed
     , Link, DocumentReference
+    , Date
     , text, structuredText, image, date, link
     , structuredTextAsHtml, structuredTextBlockAsHtml
     , imageAsHtml, embedAsHtml, linkAsHtml
@@ -40,6 +41,11 @@ following components.
 ### Links
 
 @docs Link, DocumentReference
+
+
+### Time
+
+@docs Date
 
 
 ## Decoding fields
@@ -125,6 +131,12 @@ type alias Link =
 -}
 type alias DocumentReference =
     Internal.DocumentReference
+
+
+{-| A reference to a Prismic date.
+-}
+type alias Date =
+    Time.Posix
 
 
 

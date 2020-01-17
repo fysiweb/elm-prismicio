@@ -14,6 +14,7 @@ import Pages.Views
 import Prismic
 import Prismic.Field as Prismic exposing (defaultLinkResolver)
 import Task
+import Time
 
 
 main : Program () Model Msg
@@ -128,10 +129,16 @@ view model =
     Html.div []
         [ model.homepage
             |> Maybe.map (.title >> Pages.Views.asHtml >> Html.div [])
-            |> Maybe.withDefault (Html.text "dddd")
+            |> Maybe.withDefault (Html.text ".homepage")
         , model.homepage
             |> Maybe.map (.richtext >> Pages.Views.asHtml >> Html.div [])
-            |> Maybe.withDefault (Html.text "dddd")
+            |> Maybe.withDefault (Html.text ".richtext")
+        , model.homepage
+            |> Maybe.map (.image >> .main >> Prismic.imageAsHtml >> List.singleton >> Html.div [])
+            |> Maybe.withDefault (Html.text ".richtext")
+        , model.homepage
+            |> Maybe.map (.date >> Time.posixToMillis >> String.fromInt >> Html.text)
+            |> Maybe.withDefault (Html.text ".date")
         ]
 
 

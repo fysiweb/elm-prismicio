@@ -14,9 +14,11 @@ import Prismic
         )
 import Prismic.Field as Field
     exposing
-        ( ImageViews
+        ( Date
+        , ImageViews
         , Link
         , StructuredText
+        , date
         , image
         , link
         , structuredText
@@ -35,6 +37,8 @@ import Prismic.Slice as Slice
 type alias Homepage =
     { title : StructuredText
     , richtext : StructuredText
+    , image : ImageViews
+    , date : Date
     }
 
 
@@ -74,6 +78,8 @@ decodeHomepage =
     decode Homepage
         |> required "title" structuredText
         |> required "richtext" structuredText
+        |> required "image" image
+        |> required "date" date
 
 
 bodySliceZone : Decoder Slice BodySlice
