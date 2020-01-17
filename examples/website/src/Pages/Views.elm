@@ -1,4 +1,4 @@
-module Pages.Views exposing (viewBodySlice, viewHeader)
+module Pages.Views exposing (asHtml, viewBodySlice, viewHeader)
 
 import Documents.Homepage exposing (BodySlice(..), GalleryGroup, HighlightGroup, Homepage)
 import Documents.Menu exposing (Menu)

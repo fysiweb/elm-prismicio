@@ -17,6 +17,7 @@ module Prismic exposing
     , groupField, sliceZoneField
     , required, optional
     , group, sliceZone
+    , decodeResult
     )
 
 {-| An Elm SDK for [Prismic.io](https://prismic.io).
@@ -130,7 +131,7 @@ type Model
         { api : Maybe Api
         , url : String
         , nextRequestId : Int
-        , cache : Dict String (Response Document)
+        , cache : Dict String Response
         , options : Options
         }
 
@@ -261,12 +262,12 @@ This type is parameterized by `docType`, which is determined by the `Decoder`
 you pass to `submit`.
 
 -}
-type alias Response docType =
+type alias Response =
     { license : String
     , nextPage : Maybe String
     , page : Int
     , prevPage : Maybe String
-    , results : List docType
+    , results : List Document
     , resultsPerPage : Int
     , resultsSize : Int
     , totalPages : Int
@@ -277,6 +278,10 @@ type alias Response docType =
 
 
 -- DECODERS
+
+
+decodeResult =
+    Internal.decodeValue
 
 
 decodeRef : Json.Decoder Ref
@@ -355,7 +360,7 @@ decodeExperiments =
 
 {-| Decode a `Response` from JSON.
 -}
-decodeResponse : Json.Decoder (Response Document)
+decodeResponse : Json.Decoder Response
 decodeResponse =
     Json.succeed Response
         |> JsonP.required "license" Json.string
@@ -631,7 +636,7 @@ handleJsonResponse decoder response =
             Err Http.NetworkError
 
         Http.GoodStatus_ _ body ->
-            case Json.decodeString decoder body of
+            case Json.decodeString decoder body |> Debug.log "EEEEEEEEEEEEE" of
                 Err _ ->
                     Err (Http.BadBody body)
 
@@ -646,25 +651,16 @@ own Elm document type.
 
 -}
 submit :
-    Decoder Document docType
-    -> Task PrismicError Request
-    -> Task PrismicError ( Model, Response docType )
-submit decodeDocType requestTask =
+    --    Decoder Document docType
+    Task PrismicError Request
+    -> Task PrismicError ( Model, Response )
+submit requestTask =
     let
         doSubmit (Request req) =
-            let
-                decodeResponseToUserDocType : Response Document -> Task PrismicError a
-                decodeResponseToUserDocType response =
-                    response.results
-                        |> List.map (Internal.decodeValue decodeDocType)
-                        |> Result.collect
-                        |> Result.map (\docs -> { response | results = docs })
-                        |> Task.fromResult
-                        |> Task.mapError DecodeDocumentError
-            in
             case getFromCache req.config req.model of
                 Just response_ ->
-                    decodeResponseToUserDocType response_
+                    response_
+                        |> Task.succeed
                         |> Task.map (Tuple.pair req.model)
 
                 Nothing ->
@@ -679,7 +675,8 @@ submit decodeDocType requestTask =
                         |> Task.mapError SubmitRequestError
                         |> Task.andThen
                             (\origResponse ->
-                                decodeResponseToUserDocType origResponse
+                                origResponse
+                                    |> Task.succeed
                                     |> Task.map
                                         (\response_ ->
                                             ( setInCache req.config origResponse req.model
@@ -849,14 +846,14 @@ predicatesToStr predicates =
 getFromCache :
     RequestConfig
     -> Model
-    -> Maybe (Response Document)
+    -> Maybe Response
 getFromCache request (Model model) =
     Dict.get (requestToKey request) model.cache
 
 
 setInCache :
     RequestConfig
-    -> Response Document
+    -> Response
     -> Model
     -> Model
 setInCache request response (Model model) =

@@ -34,11 +34,7 @@ import Prismic.Slice as Slice
 
 type alias Homepage =
     { title : StructuredText
-    , tagline : StructuredText
-    , buttonText : String
-    , buttonLink : Link
-    , backgroundImage : ImageViews
-    , body : List BodySlice
+    , richtext : StructuredText
     }
 
 
@@ -77,11 +73,7 @@ decodeHomepage : Decoder Document Homepage
 decodeHomepage =
     decode Homepage
         |> required "title" structuredText
-        |> required "tagline" structuredText
-        |> required "buttonText" text
-        |> required "buttonLink" link
-        |> required "backgroundImage" image
-        |> sliceZone "body" bodySliceZone
+        |> required "richtext" structuredText
 
 
 bodySliceZone : Decoder Slice BodySlice

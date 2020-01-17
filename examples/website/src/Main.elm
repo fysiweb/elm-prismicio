@@ -7,17 +7,16 @@ import Documents.Page
 import Html exposing (Html)
 import Html.Attributes exposing (class, href, src, target)
 import Html.Events exposing (onClick)
+import Json.Decode as Json
 import Pages.Homepage
 import Pages.Page
+import Pages.Views
 import Prismic
 import Prismic.Field as Prismic exposing (defaultLinkResolver)
 import Task
 
 
-
---main : Program Never Model Msg
-
-
+main : Program () Model Msg
 main =
     Browser.document
         { init = \_ -> init
@@ -46,7 +45,7 @@ init =
     let
         model =
             { prismic =
-                Prismic.init "https://mattjbray-testing.prismic.io/api"
+                Prismic.init "https://liascript.prismic.io/api"
             , currentPage = Homepage
             , menu = Nothing
             , homepage = Nothing
@@ -56,14 +55,12 @@ init =
     ( model, fetchHomePage model.prismic )
 
 
-type alias PrismicResult a =
-    Result Prismic.PrismicError ( Prismic.Model, Prismic.Response a )
+type alias PrismicResult =
+    Result Prismic.PrismicError ( Prismic.Model, Prismic.Response )
 
 
 type Msg
-    = HomepageResponse (PrismicResult Documents.Homepage.Homepage)
-    | MenuResponse (PrismicResult Documents.Menu.Menu)
-    | PageResponse (PrismicResult Documents.Page.Page)
+    = HomepageResponse PrismicResult
     | NavigateTo Prismic.DocumentReference
 
 
@@ -88,47 +85,15 @@ update msg model =
                 | prismic =
                     newPrismic
                 , homepage =
-                    List.head result.results
+                    result.results
+                        |> List.head
+                        |> Maybe.andThen (Prismic.decodeResult Documents.Homepage.decodeHomepage >> Result.toMaybe)
               }
-            , fetchMenu newPrismic
+            , Cmd.none
+              --fetchHomePage newPrismic
             )
 
         HomepageResponse (Err err) ->
-            let
-                _ =
-                    Debug.log "err" err
-            in
-            ( model, Cmd.none )
-
-        MenuResponse (Ok ( prismic, result )) ->
-            ( { model
-                | prismic =
-                    Prismic.cache model.prismic prismic
-                , menu =
-                    result.results
-                        |> List.head
-              }
-            , Cmd.none
-            )
-
-        MenuResponse (Err err) ->
-            let
-                _ =
-                    Debug.log "err" err
-            in
-            ( model, Cmd.none )
-
-        PageResponse (Ok ( prismic, result )) ->
-            ( { model
-                | prismic =
-                    Prismic.cache model.prismic prismic
-                , page =
-                    List.head result.results
-              }
-            , Cmd.none
-            )
-
-        PageResponse (Err err) ->
             let
                 _ =
                     Debug.log "err" err
@@ -142,7 +107,7 @@ update msg model =
 
                 ( "page", Just uid ) ->
                     ( { model | currentPage = Page, page = Nothing }
-                    , fetchPage model.prismic uid
+                    , Cmd.none
                     )
 
                 _ ->
@@ -153,45 +118,20 @@ fetchHomePage : Prismic.Model -> Cmd Msg
 fetchHomePage prismic =
     Prismic.api prismic
         |> Prismic.form "everything"
-        |> Prismic.query [ Prismic.at "my.homepage.uid" "homepage" ]
-        |> Prismic.submit Documents.Homepage.decodeHomepage
+        |> Prismic.query [ Prismic.at "document.type" "title" ]
+        |> Prismic.submit
         |> Task.attempt HomepageResponse
-
-
-fetchMenu : Prismic.Model -> Cmd Msg
-fetchMenu prismic =
-    Prismic.api prismic
-        |> Prismic.form "everything"
-        |> Prismic.query [ Prismic.at "my.menu.uid" "main-nav" ]
-        |> Prismic.submit Documents.Menu.decodeMenu
-        |> Task.attempt MenuResponse
-
-
-fetchPage : Prismic.Model -> String -> Cmd Msg
-fetchPage prismic uid =
-    Prismic.api prismic
-        |> Prismic.form "everything"
-        |> Prismic.query [ Prismic.at "my.page.uid" uid ]
-        |> Prismic.submit Documents.Page.decodePage
-        |> Task.attempt PageResponse
 
 
 view : Model -> Html Msg
 view model =
     Html.div []
-        [ case model.currentPage of
-            Homepage ->
-                Maybe.map2 (Pages.Homepage.view linkResolver)
-                    model.menu
-                    model.homepage
-                    |> Maybe.withDefault loading
-
-            Page ->
-                Maybe.map2 (Pages.Page.view linkResolver)
-                    model.menu
-                    model.page
-                    |> Maybe.withDefault loading
-        , viewFooter
+        [ model.homepage
+            |> Maybe.map (.title >> Pages.Views.asHtml >> Html.div [])
+            |> Maybe.withDefault (Html.text "dddd")
+        , model.homepage
+            |> Maybe.map (.richtext >> Pages.Views.asHtml >> Html.div [])
+            |> Maybe.withDefault (Html.text "dddd")
         ]
 
 
