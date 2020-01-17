@@ -128,6 +128,9 @@ view : Model -> Html Msg
 view model =
     Html.div []
         [ model.homepage
+            |> Maybe.map (\e -> Html.text <| (String.fromFloat e.geo.latitude ++ " - " ++ String.fromFloat e.geo.longitude))
+            |> Maybe.withDefault (Html.text ".gps")
+        , model.homepage
             |> Maybe.map (.title >> Pages.Views.asHtml >> Html.div [])
             |> Maybe.withDefault (Html.text ".homepage")
         , model.homepage

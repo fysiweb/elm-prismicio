@@ -5,8 +5,8 @@ module Prismic.Field exposing
     , Embed
     , Link, DocumentReference
     , Date, Timestamp
-    , Color
-    , text, structuredText, image, date, link, timestamp, color
+    , Color, GeoPoint
+    , text, structuredText, image, date, link, timestamp, color, geoPoint
     , structuredTextAsHtml, structuredTextBlockAsHtml
     , imageAsHtml, embedAsHtml, linkAsHtml
     , LinkResolver, defaultLinkResolver, resolveLink
@@ -51,12 +51,12 @@ following components.
 
 ### Misc
 
-@docs Color
+@docs Color, GeoPoint
 
 
 ## Decoding fields
 
-@docs text, structuredText, image, date, link, timestamp, color
+@docs text, structuredText, image, date, link, timestamp, color, geoPoint
 
 
 ## Viewing fields
@@ -155,6 +155,12 @@ type alias Timestamp =
 -}
 type alias Color =
     String
+
+
+{-| A reference to a Prismic GeoPoint.
+-}
+type alias GeoPoint =
+    Internal.Point
 
 
 
@@ -535,6 +541,21 @@ color =
 
                 _ ->
                     Err "Expected a Date field, but got ''."
+        )
+
+
+{-| Decode a GeoPoint field.
+-}
+geoPoint : Decoder Field GeoPoint
+geoPoint =
+    Decoder
+        (\field ->
+            case field of
+                Geo point ->
+                    Ok point
+
+                _ ->
+                    Err "Expected an Image field, but got ''."
         )
 
 

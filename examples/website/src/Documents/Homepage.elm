@@ -16,12 +16,14 @@ import Prismic.Field as Field
     exposing
         ( Color
         , Date
+        , GeoPoint
         , ImageViews
         , Link
         , StructuredText
         , Timestamp
         , color
         , date
+        , geoPoint
         , image
         , link
         , structuredText
@@ -45,6 +47,7 @@ type alias Homepage =
     , date : Date
     , time : Timestamp
     , color : Color
+    , geo : GeoPoint
     }
 
 
@@ -88,6 +91,7 @@ decodeHomepage =
         |> required "date" date
         |> required "time" timestamp
         |> required "color" color
+        |> required "gps" geoPoint
 
 
 bodySliceZone : Decoder Slice BodySlice

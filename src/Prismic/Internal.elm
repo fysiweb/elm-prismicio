@@ -1,4 +1,64 @@
-module Prismic.Internal exposing (Block, Decoder(..), Document, DocumentField(..), DocumentReference, Embed(..), EmbedRich, EmbedVideo, Field(..), GetKey, Group, ImageDimensions, ImageView, ImageViews, Link(..), Slice, SliceContentV1(..), SliceContentVersion(..), SliceZone, Span, SpanElement(..), StructuredText(..), StructuredTextBlock(..), andThen, apply, custom, decode, decodeBlock, decodeDate, decodeDocumentField, decodeDocumentJson, decodeDocumentReferenceJson, decodeEmbed, decodeEmbedRich, decodeEmbedVideo, decodeField, decodeGroups, decodeImageDimensions, decodeImageView, decodeImageViews, decodeLink, decodeSearchResult, decodeSlice, decodeSliceContent, decodeSliceContentField, decodeSliceZone, decodeSpan, decodeSpanType, decodeStructuredText, decodeStructuredTextBlock, decodeValue, fail, map, optional, optionalField, required, requiredField, succeed)
+module Prismic.Internal exposing
+    ( Block
+    , Decoder(..)
+    , Document
+    , DocumentField(..)
+    , DocumentReference
+    , Embed(..)
+    , EmbedRich
+    , EmbedVideo
+    , Field(..)
+    , GetKey
+    , Group
+    , ImageDimensions
+    , ImageView
+    , ImageViews
+    , Link(..)
+    , Point
+    , Slice
+    , SliceContentV1(..)
+    , SliceContentVersion(..)
+    , SliceZone
+    , Span
+    , SpanElement(..)
+    , StructuredText(..)
+    , StructuredTextBlock(..)
+    , andThen
+    , apply
+    , custom
+    , decode
+    , decodeBlock
+    , decodeDate
+    , decodeDocumentField
+    , decodeDocumentJson
+    , decodeDocumentReferenceJson
+    , decodeEmbed
+    , decodeEmbedRich
+    , decodeEmbedVideo
+    , decodeField
+    , decodeGroups
+    , decodeImageDimensions
+    , decodeImageView
+    , decodeImageViews
+    , decodeLink
+    , decodeSearchResult
+    , decodeSlice
+    , decodeSliceContent
+    , decodeSliceContentField
+    , decodeSliceZone
+    , decodeSpan
+    , decodeSpanType
+    , decodeStructuredText
+    , decodeStructuredTextBlock
+    , decodeValue
+    , fail
+    , map
+    , optional
+    , optionalField
+    , required
+    , requiredField
+    , succeed
+    )
 
 --import Date
 
@@ -36,6 +96,7 @@ type Field
     | Number Float
     | Date Time.Posix
     | Timestamp Time.Posix
+    | Geo Point
     | Link Link
 
 
@@ -163,6 +224,12 @@ type alias EmbedRich =
 type Link
     = DocumentLink DocumentReference Bool
     | WebLink String
+
+
+type alias Point =
+    { latitude : Float
+    , longitude : Float
+    }
 
 
 {-| A reference to Html.a Prismic document.
@@ -400,6 +467,15 @@ decodeField =
 
                 "Link.web" ->
                     Json.map Link decodeLink
+
+                "GeoPoint" ->
+                    Json.map Geo
+                        (Json.field "value"
+                            (Json.map2 Point
+                                (Json.field "latitude" Json.float)
+                                (Json.field "longitude" Json.float)
+                            )
+                        )
 
                 _ ->
                     Json.fail ("Unknown document field type: " ++ typeStr)
