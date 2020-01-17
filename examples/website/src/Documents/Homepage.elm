@@ -48,6 +48,7 @@ type alias Homepage =
     , time : Timestamp
     , color : Color
     , geo : GeoPoint
+    , select : Field.Select
     }
 
 
@@ -92,6 +93,7 @@ decodeHomepage =
         |> required "time" timestamp
         |> required "color" color
         |> required "gps" geoPoint
+        |> required "select" Field.select
 
 
 bodySliceZone : Decoder Slice BodySlice
