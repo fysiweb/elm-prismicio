@@ -5,7 +5,8 @@ module Prismic.Field exposing
     , Embed
     , Link, DocumentReference
     , Date, Timestamp
-    , text, structuredText, image, date, link, timestamp
+    , Color
+    , text, structuredText, image, date, link, timestamp, color
     , structuredTextAsHtml, structuredTextBlockAsHtml
     , imageAsHtml, embedAsHtml, linkAsHtml
     , LinkResolver, defaultLinkResolver, resolveLink
@@ -48,9 +49,14 @@ following components.
 @docs Date, Timestamp
 
 
+### Misc
+
+@docs Color
+
+
 ## Decoding fields
 
-@docs text, structuredText, image, date, link, timestamp
+@docs text, structuredText, image, date, link, timestamp, color
 
 
 ## Viewing fields
@@ -139,10 +145,16 @@ type alias Date =
     Time.Posix
 
 
-{-| A reference to a Prismic timestamp.
+{-| A reference to a Prismic Timestamp.
 -}
 type alias Timestamp =
     Time.Posix
+
+
+{-| A reference to a Prismic color.
+-}
+type alias Color =
+    String
 
 
 
@@ -508,6 +520,21 @@ timestamp =
 
                 _ ->
                     Err "Expected a Timestamp field, but got ''."
+        )
+
+
+{-| Decode a Color field.
+-}
+color : Decoder Field String
+color =
+    Decoder
+        (\field ->
+            case field of
+                Color x ->
+                    Ok x
+
+                _ ->
+                    Err "Expected a Date field, but got ''."
         )
 
 

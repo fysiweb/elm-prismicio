@@ -146,6 +146,11 @@ view model =
             |> Maybe.withDefault (Html.text ".timestamp")
             |> List.singleton
             |> Html.div []
+        , model.homepage
+            |> Maybe.map (.color >> Html.text)
+            |> Maybe.withDefault (Html.text ".color")
+            |> List.singleton
+            |> Html.div []
         ]
 
 

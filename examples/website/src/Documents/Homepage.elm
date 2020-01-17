@@ -14,11 +14,13 @@ import Prismic
         )
 import Prismic.Field as Field
     exposing
-        ( Date
+        ( Color
+        , Date
         , ImageViews
         , Link
         , StructuredText
         , Timestamp
+        , color
         , date
         , image
         , link
@@ -42,6 +44,7 @@ type alias Homepage =
     , image : ImageViews
     , date : Date
     , time : Timestamp
+    , color : Color
     }
 
 
@@ -84,6 +87,7 @@ decodeHomepage =
         |> required "image" image
         |> required "date" date
         |> required "time" timestamp
+        |> required "color" color
 
 
 bodySliceZone : Decoder Slice BodySlice
