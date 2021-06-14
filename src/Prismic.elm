@@ -17,6 +17,7 @@ module Prismic exposing
     , groupField, sliceZoneField
     , required, optional
     , group, sliceZone
+    , PrismicResult, PrismicTask, fetch, fetchWithMsg, renderPrismicError
     )
 
 {-| An Elm SDK for [Prismic.io](https://prismic.io).
@@ -165,6 +166,47 @@ type PrismicError
     | DecodeDocumentError String
 
 
+renderPrismicError : PrismicError -> String
+renderPrismicError error =
+    let
+        parseHttpError : Http.Error -> String
+        parseHttpError err =
+            case err of
+                Http.BadUrl _ ->
+                    "Bad Url"
+
+                Http.Timeout ->
+                    "Timeout"
+
+                Http.NetworkError ->
+                    "Network Error"
+
+                Http.BadStatus statusCode ->
+                    "Status Code: " ++ String.fromInt statusCode
+
+                Http.BadBody e ->
+                    e
+    in
+    case error of
+        FormDoesNotExist message ->
+            "Form does not exist: " ++ message
+
+        RefDoesNotExist message ->
+            "Ref does not exist: " ++ message
+
+        BookmarkDoesNotExist message ->
+            "Bookmark does not exist: " ++ message
+
+        FetchApiError subError ->
+            "Fetch API error: " ++ parseHttpError subError
+
+        SubmitRequestError subError ->
+            "Submit request error: " ++ parseHttpError subError
+
+        DecodeDocumentError message ->
+            "Decode document error: " ++ message
+
+
 
 -- Types: API
 
@@ -249,6 +291,14 @@ type alias Experiments =
     { draft : List String
     , running : List String
     }
+
+
+type alias PrismicTask x =
+    Task PrismicError ( Model, Response x )
+
+
+type alias PrismicResult x =
+    Result PrismicError ( Model, Response x )
 
 
 
@@ -412,6 +462,24 @@ type alias RequestConfig =
     , q : String
     , lang : String
     }
+
+
+fetch : String -> Decoder Document x -> Model -> PrismicTask x
+fetch type_ decoder prismic =
+    api prismic
+        |> form "everything"
+        |> query [ at "document.type" type_ ]
+        |> submit decoder
+
+
+fetchWithMsg :
+    (PrismicResult x -> msg)
+    -> String
+    -> Decoder Document x
+    -> Model
+    -> Cmd msg
+fetchWithMsg msg type_ decoder prismic =
+    fetch type_ decoder prismic |> Task.attempt msg
 
 
 
